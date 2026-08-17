@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+mysql-connector-python
+langchain
+langchain-groq
+langchain-huggingface
+langchain-community
+langchain-chroma
+langchain-core
+chromadb
+pydantic
+python-multipart

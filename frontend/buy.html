@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buyer Hub — ShopAI</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    .page-body {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      padding-top: 60px;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .panel-header .ph-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: #22c97a18;
+      display: grid; place-items: center;
+      font-size: 1rem;
+    }
+    .panel-header h2 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .panel-header p { font-size: 0.78rem; color: var(--text-sub); }
+
+    .status-bar {
+      padding: 6px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 24px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Product cards inside AI messages */
+    .product-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .product-card-mini {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      animation: fadeUp 0.2s ease both;
+    }
+    .product-card-mini .pc-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .product-card-mini .pc-name {
+      font-weight: 600;
+      color: var(--text);
+      font-family: var(--font-display);
+      font-size: 0.83rem;
+    }
+    .product-card-mini .pc-meta {
+      color: var(--text-sub);
+      font-size: 0.75rem;
+    }
+    .product-card-mini .pc-price {
+      margin-left: auto;
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--green);
+      white-space: nowrap;
+    }
+
+    .chat-input-area {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      resize: none;
+      min-height: 44px;
+      max-height: 130px;
+      padding: 11px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+      line-height: 1.5;
+    }
+    .chat-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #22c97a22; }
+    .chat-input::placeholder { color: var(--text-muted); }
+
+    .send-btn {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: var(--green);
+      border: none;
+      cursor: pointer;
+      display: grid; place-items: center;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .send-btn:hover { background: #2ee088; transform: scale(1.05); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .send-btn svg { color: #fff; }
+
+    /* Suggestions */
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 24px 16px;
+      flex-shrink: 0;
+    }
+    .suggestion-chip {
+      padding: 7px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .suggestion-chip:hover {
+      border-color: var(--green);
+      color: var(--green);
+      background: #22c97a0d;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <a href="/dashboard.html" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back
+      </a>
+      <a class="navbar-brand" href="/dashboard.html"><span class="dot"></span> ShopAI</a>
+    </div>
+    <div class="navbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="resetConversation()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+        Reset Chat
+      </button>
+      <div class="user-badge">
+        <div class="avatar" id="nav-avatar">?</div>
+        <span id="nav-username">User</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-body">
+
+    <div class="panel-header">
+      <div class="ph-icon">🛍️</div>
+      <div>
+        <h2>Buyer Assistant</h2>
+        <p>Tell me what you're looking for and I'll find the best matches</p>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span class="status-dot"></span>
+      AI Agent connected · Llama 3.3-70b · Semantic search enabled
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="bubble-wrap">
+        <div class="bubble-avatar ai-avatar">AI</div>
+        <div class="bubble ai">
+          🛍️ Hi! I'm your shopping assistant. Tell me what you're looking for — a product type, budget, or specific features — and I'll find the best options for you!
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick suggestions -->
+    <div class="suggestions" id="suggestions">
+      <span class="suggestion-chip" onclick="useChip(this)">🎮 Gaming console</span>
+      <span class="suggestion-chip" onclick="useChip(this)">📱 Budget smartphone</span>
+      <span class="suggestion-chip" onclick="useChip(this)">💻 Laptop for work</span>
+      <span class="suggestion-chip" onclick="useChip(this)">🎧 Wireless headphones</span>
+      <span class="suggestion-chip" onclick="useChip(this)">📺 4K TV</span>
+    </div>
+
+    <div class="chat-input-area">
+      <textarea
+        id="chat-input"
+        class="chat-input"
+        placeholder="What are you looking for?"
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/js/utils.js"></script>
+  <script>
+    if (!Auth.guard()) {}
+    fillNavUser();
+
+    let isLoading = false;
+
+    const catIcons = { smartphone: '📱', ordinateur: '💻', audio: '🎧', tv: '📺', gaming: '🎮', wearable: '⌚' };
+
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    function useChip(el) {
+      document.getElementById('chat-input').value = el.textContent.trim().replace(/^[^\w]+/, '');
+      sendMessage();
+      document.getElementById('suggestions').style.display = 'none';
+    }
+
+    function appendBubble(text, role, products = []) {
+      const wrap = document.createElement('div');
+      wrap.className = `bubble-wrap ${role}`;
+
+      const av = document.createElement('div');
+      av.className = `bubble-avatar ${role === 'user' ? 'user-avatar' : 'ai-avatar'}`;
+      av.textContent = role === 'user' ? (Auth.username()||'U').charAt(0).toUpperCase() : 'AI';
+
+      const bub = document.createElement('div');
+      bub.className = `bubble ${role === 'user' ? 'user' : 'ai'}`;
+      bub.textContent = text;
+
+      // Append product cards for AI messages
+      if (role === 'ai' && products.length > 0) {
+        const cards = document.createElement('div');
+        cards.className = 'product-cards';
+        products.forEach((p, i) => {
+          const card = document.createElement('div');
+          card.className = 'product-card-mini';
+          card.style.animationDelay = `${i * 0.06}s`;
+          card.innerHTML = `
+            <span class="pc-icon">${catIcons[p.category] || '📦'}</span>
+            <div>
+              <div class="pc-name">${escapeHtml(p.name || '—')}</div>
+              <div class="pc-meta">${escapeHtml(p.category || '')} · Stock: ${p.stock || 0}</div>
+            </div>
+            <span class="pc-price">${p.price ? parseFloat(p.price).toFixed(2) + '€' : '—'}</span>
+          `;
+          cards.appendChild(card);
+        });
+        bub.appendChild(cards);
+      }
+
+      wrap.appendChild(av);
+      wrap.appendChild(bub);
+
+      const container = document.getElementById('chat-messages');
+      container.appendChild(wrap);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendTyping() {
+      const wrap = document.createElement('div');
+      wrap.className = 'bubble-wrap typing-bubble';
+      wrap.id = 'typing-indicator';
+      wrap.innerHTML = `
+        <div class="bubble-avatar ai-avatar">AI</div>
+        <div class="bubble ai"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+      `;
+      const container = document.getElementById('chat-messages');
+      container.appendChild(wrap);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    async function sendMessage() {
+      if (isLoading) return;
+      const input = document.getElementById('chat-input');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      document.getElementById('suggestions').style.display = 'none';
+      input.value = '';
+      input.style.height = 'auto';
+      appendBubble(text, 'user');
+      appendTyping();
+
+      isLoading = true;
+      document.getElementById('send-btn').disabled = true;
+
+      try {
+        const data = await API.post('/buyer/chat', { message: text });
+        removeTyping();
+        appendBubble(data.response, 'ai', data.matched_products || []);
+      } catch (err) {
+        removeTyping();
+        appendBubble('⚠️ Something went wrong. Please try again.', 'ai');
+        showToast('Request failed', 'error');
+      }
+
+      isLoading = false;
+      document.getElementById('send-btn').disabled = false;
+      input.focus();
+    }
+
+    async function resetConversation() {
+      await API.post('/buyer/reset');
+      document.getElementById('chat-messages').innerHTML = `
+        <div class="bubble-wrap">
+          <div class="bubble-avatar ai-avatar">AI</div>
+          <div class="bubble ai">🔄 Conversation reset. What are you looking for today?</div>
+        </div>
+      `;
+      document.getElementById('suggestions').style.display = 'flex';
+      showToast('Conversation reset', 'success');
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

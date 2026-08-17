@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seller Hub — ShopAI</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    .page-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      padding-top: 60px;
+    }
+
+    /* ── Chat panel (left) ──────────────────────────────────────────────────── */
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .panel-header .ph-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      display: grid; place-items: center;
+      font-size: 1rem;
+    }
+    .panel-header h2 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .panel-header p {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 24px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-input-area {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      resize: none;
+      min-height: 44px;
+      max-height: 130px;
+      padding: 11px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+      line-height: 1.5;
+    }
+    .chat-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .chat-input::placeholder { color: var(--text-muted); }
+
+    .send-btn {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: grid; place-items: center;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .send-btn:hover { background: #6b8fff; transform: scale(1.05); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .send-btn svg { color: #fff; }
+
+    /* ── Inventory panel (right) ────────────────────────────────────────────── */
+    .inventory-panel {
+      width: 360px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .inventory-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .inventory-header h3 {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .inventory-count {
+      padding: 3px 9px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-glow);
+      border-radius: 99px;
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .inventory-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* ── Status bar ─────────────────────────────────────────────────────────── */
+    .status-bar {
+      padding: 6px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <a href="/dashboard.html" class="btn btn-ghost btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back
+      </a>
+      <a class="navbar-brand" href="/dashboard.html"><span class="dot"></span> ShopAI</a>
+    </div>
+    <div class="navbar-right">
+      <button class="btn btn-ghost btn-sm" id="reset-btn" onclick="resetConversation()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+        Reset Chat
+      </button>
+      <div class="user-badge">
+        <div class="avatar" id="nav-avatar">?</div>
+        <span id="nav-username">User</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-body">
+
+    <!-- Chat panel -->
+    <div class="chat-panel">
+      <div class="panel-header">
+        <div class="ph-icon">📦</div>
+        <div>
+          <h2>Seller Assistant</h2>
+          <p>Describe your product and I'll help you list it</p>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span class="status-dot"></span>
+        AI Agent connected · Llama 3.3-70b
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <!-- Welcome message -->
+        <div class="bubble-wrap">
+          <div class="bubble-avatar ai-avatar">AI</div>
+          <div class="bubble ai">
+            👋 Hello! I'm your seller assistant. Tell me about the product you'd like to add to the inventory and I'll help you create a perfect listing.
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <textarea
+          id="chat-input"
+          class="chat-input"
+          placeholder="Describe your product…"
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Inventory panel -->
+    <div class="inventory-panel">
+      <div class="inventory-header">
+        <h3>My Inventory</h3>
+        <span class="inventory-count" id="inv-count">0</span>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="loadInventory()" title="Refresh">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+        </button>
+      </div>
+      <div class="inventory-list" id="inventory-list">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          Loading your products…
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="/js/utils.js"></script>
+  <script>
+    if (!Auth.guard()) {}
+    fillNavUser();
+
+    let isLoading = false;
+
+    // ── Auto-resize textarea ────────────────────────────────────────────────────
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    }
+
+    // ── Append chat bubble ──────────────────────────────────────────────────────
+    function appendBubble(text, role) {
+      const wrap = document.createElement('div');
+      wrap.className = `bubble-wrap ${role}`;
+
+      const av  = document.createElement('div');
+      av.className = `bubble-avatar ${role === 'user' ? 'user-avatar' : 'ai-avatar'}`;
+      av.textContent = role === 'user' ? (Auth.username()||'U').charAt(0).toUpperCase() : 'AI';
+
+      const bub = document.createElement('div');
+      bub.className = `bubble ${role === 'user' ? 'user' : 'ai'}`;
+      bub.textContent = text;
+
+      wrap.appendChild(av);
+      wrap.appendChild(bub);
+
+      const container = document.getElementById('chat-messages');
+      container.appendChild(wrap);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendTyping() {
+      const wrap = document.createElement('div');
+      wrap.className = 'bubble-wrap typing-bubble';
+      wrap.id = 'typing-indicator';
+      wrap.innerHTML = `
+        <div class="bubble-avatar ai-avatar">AI</div>
+        <div class="bubble ai"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+      `;
+      const container = document.getElementById('chat-messages');
+      container.appendChild(wrap);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typing-indicator');
+      if (el) el.remove();
+    }
+
+    // ── Send message ────────────────────────────────────────────────────────────
+    async function sendMessage() {
+      if (isLoading) return;
+      const input = document.getElementById('chat-input');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      appendBubble(text, 'user');
+      appendTyping();
+
+      isLoading = true;
+      document.getElementById('send-btn').disabled = true;
+
+      try {
+        const data = await API.post('/seller/chat', { message: text });
+        removeTyping();
+        appendBubble(data.response, 'ai');
+
+        if (data.saved_product_id) {
+          showToast('✅ Product saved to inventory!', 'success');
+          loadInventory();
+        }
+      } catch (err) {
+        removeTyping();
+        appendBubble('⚠️ Something went wrong. Please try again.', 'ai');
+        showToast('Request failed', 'error');
+      }
+
+      isLoading = false;
+      document.getElementById('send-btn').disabled = false;
+      input.focus();
+    }
+
+    // ── Reset conversation ──────────────────────────────────────────────────────
+    async function resetConversation() {
+      await API.post('/seller/reset');
+      document.getElementById('chat-messages').innerHTML = `
+        <div class="bubble-wrap">
+          <div class="bubble-avatar ai-avatar">AI</div>
+          <div class="bubble ai">🔄 Conversation reset. Tell me about a new product to add!</div>
+        </div>
+      `;
+      showToast('Conversation reset', 'success');
+    }
+
+    // ── Load inventory ──────────────────────────────────────────────────────────
+    async function loadInventory() {
+      const list  = document.getElementById('inventory-list');
+      const count = document.getElementById('inv-count');
+
+      try {
+        const data = await API.get('/products/mine');
+        const products = data.products || [];
+
+        count.textContent = products.length;
+
+        if (products.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              No products yet. Start chatting to add your first product!
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = '';
+        const icons = { smartphone: '📱', ordinateur: '💻', audio: '🎧', tv: '📺', gaming: '🎮', wearable: '⌚' };
+
+        products.forEach(p => {
+          const item = document.createElement('div');
+          item.className = 'product-item';
+          item.id = `prod-${p.id}`;
+          const icon = icons[p.category] || '📦';
+          item.innerHTML = `
+            <div class="prod-icon">${icon}</div>
+            <div class="prod-info">
+              <div class="prod-name">${escapeHtml(p.name)}</div>
+              <div class="prod-desc">${escapeHtml(p.description || '—')}</div>
+            </div>
+            <div class="prod-price">${p.price.toFixed(2)}€</div>
+            <button class="btn btn-danger" onclick="deleteProduct(${p.id})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          `;
+          list.appendChild(item);
+        });
+      } catch (err) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div>Failed to load products.</div>`;
+      }
+    }
+
+    // ── Delete product ──────────────────────────────────────────────────────────
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product from inventory and vector database?')) return;
+      try {
+        await API.del(`/products/${id}`);
+        const el = document.getElementById(`prod-${id}`);
+        if (el) {
+          el.style.opacity = '0';
+          el.style.transform = 'translateX(20px)';
+          el.style.transition = '0.25s ease';
+          setTimeout(() => { el.remove(); loadInventory(); }, 280);
+        }
+        showToast('Product deleted', 'success');
+      } catch (err) {
+        showToast('Failed to delete product', 'error');
+      }
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // Init
+    loadInventory();
+  </script>
+</body>
+</html>
