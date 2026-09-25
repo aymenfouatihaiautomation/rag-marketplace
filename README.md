@@ -110,6 +110,12 @@ Open http://localhost:8000/login.html
 - No formal RAGAS evaluation yet
 - Planned: HyDE query rewriting, cross-encoder reranking
 
+## Publication
+
+This project is described in a preprint on Zenodo:
+
+> Ahmed Fouatih, A. & Djebbar Senouci, O. (2026). *RAG-Based Conversational Product Catalog Management: Architecture, Structured Output as FSM, and Empirical Evaluation*. Zenodo. [https://doi.org/10.5281/zenodo.22925352](https://doi.org/10.5281/zenodo.22925352)
+
 ## Authors
 
 - **Aymen Fouatih** — [LinkedIn](https://www.linkedin.com/in/aymen-fouatih-ai-automation-5790b242a/)
